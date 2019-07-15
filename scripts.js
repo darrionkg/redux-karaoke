@@ -1,7 +1,7 @@
 // LYRIC INFO
 const songList = {
-  1: "Don't want to be a fool for you, Just another player in your game for two, You may hate me but it ain't no lie, Baby bye bye bye, Bye bye, I Don't want to make it tough, I just want to tell you that I've had enough, It might sound crazy but it ain't no lie, Baby bye bye bye".split(', '),
-  2: "Twenty-five years and my life is still, Trying to get up that great big hill of hope, For a destination, I realized quickly when I knew I should, That the world was made up of this brotherhood of man, For whatever that means, And so I cry sometimes when I'm lying in bed, Just to get it all out what's in my head, And I, I am feeling a little peculiar, And so I wake in the morning and I step outside, And I take a deep breath and I get real high, and I Scream from the top of my lungs, What's going on?, And I say hey yeah yeah hey yeah yeah, I said hey what's going on?, And I say hey yeah yeah hey yeah yeah,I said hey what's going on?".split(', ')
+  1: "Don't want to be a fool for you, Just another player in your game for two, You may hate me but it ain't no lie, Baby bye bye bye, Bye bye, I don't want to make it tough, I just want to tell you that I've had enough, It might sound crazy but it ain't no lie, Baby bye bye bye".split(', '),
+  2: "Twenty-five years and my life is still, Trying to get up that great big hill of hope, For a destination, I realized quickly when I knew I should, That the world was made up of this brotherhood of man, For whatever that means, And so I cry sometimes when I'm lying in bed, Just to get it all out what's in my head, And I, I am feeling a little peculiar, And so I wake in the morning and I step outside, And I take a deep breath and I get real high, and I scream from the top of my lungs, What's going on?, And I say hey yeah yeah hey yeah yeah, I said hey what's going on?, And I say hey yeah yeah hey yeah yeah,I said hey what's going on?".split(', ')
 };
 
 // INITIAL REDUX STATE
@@ -78,6 +78,14 @@ const songChangeReducer = (state = initialState.currentSongId, action) => {
   }
 }
 
+const rootReducer = this.Redux.combineReducers({
+  currentSongId: songChangeReducer,
+  songsById: lyricChangeReducer
+});
+
+//REDUX STORE
+const { createStore } = Redux;
+const store = createStore(rootReducer);
 // JEST TESTS + SETUP
 const { expect } = window;
 
@@ -121,11 +129,12 @@ expect(songChangeReducer(initialState, { type: null })).toEqual(initialState);
 
 expect(songChangeReducer(initialState.currentSongId, { type: 'CHANGE_SONG', newSelectedSongId: 1 })).toEqual(1);
 
-// { type: 'RESTART_SONG' }.toEqual(initialState.songsById);
+expect(rootReducer(initialState, { type: null })).toEqual(initialState);
 
-//REDUX STORE
-const { createStore } = Redux;
-const store = createStore(songChangeReducer, lyricChangeReducer);
+expect(store.getState().currentSongId).toEqual(songChangeReducer(undefined, { type: null }));
+expect(store.getState().songsById).toEqual(lyricChangeReducer(undefined, { type: null }));
+
+// { type: 'RESTART_SONG' }.toEqual(initialState.songsById);
 
 //RENDER STATE IN DOM
 
@@ -155,11 +164,29 @@ window.onload = function() {
 
 // CLICK LISTENER
 const userClick = () => {
-  if (store.getState().arrayPosition === store.getState().songLyricsArray.length - 1) {
-    store.dispatch({ type: 'RESTART_SONG' } );
+  if (store.getState().songsById[store.getState().currentSongId].arrayPosition === store.getState().songsById[store.getState().currentSongId].songArray.length - 1) {
+    store.dispatch({ type: 'RESTART_SONG',
+                     currentSongId: store.getState().currentSongId });
   } else {
-    store.dispatch({ type: 'NEXT_LYRIC' } );
+    store.dispatch({ type: 'NEXT_LYRIC',
+                     currentSongId: store.getState().currentSongId });
   }
+}
+
+const selectSong = (newSongId) => {
+  let action;
+  if (store.getState().currentSongId) {
+    action = {
+      type: 'RESTART_SONG',
+      currentSongId: store.getState().currentSongId
+    }
+    store.dispatch(action);
+  }
+  action = {
+    type: 'CHANGE_SONG',
+    newSelectedSongId: newSongId
+  }
+  store.dispatch(action);
 }
 
 // SUBSCRIBE TO REDUX STORE
